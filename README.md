@@ -26,3 +26,11 @@ Respuesta automatizada a mensajes que contengan la cadena `cari`. Composición d
 
 ### What
 Respuesta automatizada a cualquier mensaje que no contenga la cadena `cari`.
+
+## Uso
+Es necesario crear un fichero `.telegram-token` que contenga en una única línea el token del Bot. Puedes aprender como obtener uno [aqui](https://core.telegram.org/bots#6-botfather). Dicho fichero deberá situarse en el mismo directorio que el script. Una vez hecho esto ya es posible lanzar el Bot con:
+
+`python cariiibot.py`
+
+#### Recomendación
+Es habitual querer tener el Bot activo en un servidor (E.g. RaspberryPi), una buena solución para poder hacerlo y no mantener una sesión abierta permanente es usar [`screen`](https://www.gnu.org/software/screen/manual/screen.html). En Debian puede obtenerse mediante `apt-get install screen`.
