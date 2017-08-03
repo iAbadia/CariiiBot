@@ -28,6 +28,10 @@ Respuesta automatizada a mensajes que contengan la cadena `cari`. Composición d
 Respuesta automatizada a cualquier mensaje que no contenga la cadena `cari`.
 
 ## Uso
+Este Bot depende el paquete [python-telegram-bot](https://python-telegram-bot.org/) que puede instalarse facilmente mediante:
+
+`pip install python-telegram-bot`
+
 Es necesario crear un fichero `.telegram-token` que contenga en una única línea el token del Bot. Puedes aprender como obtener uno [aqui](https://core.telegram.org/bots#6-botfather). Dicho fichero deberá situarse en el mismo directorio que el script. Una vez hecho esto ya es posible lanzar el Bot con:
 
 `python cariiibot.py`
