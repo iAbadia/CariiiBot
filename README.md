@@ -34,3 +34,8 @@ Es necesario crear un fichero `.telegram-token` que contenga en una única líne
 
 #### Recomendación
 Es habitual querer tener el Bot activo en un servidor (E.g. RaspberryPi), una buena solución para poder hacerlo y no mantener una sesión abierta permanente es usar [`screen`](https://www.gnu.org/software/screen/manual/screen.html). En Debian puede obtenerse mediante `apt-get install screen`.
+
+## Screenshots
+
+![Whatt](/media/screenshots/screenshot-0.png?raw=true "Respuestas What")
+![Cariii](/media/screenshots/screenshot-1.png?raw=true "Respuestas Cariii")
