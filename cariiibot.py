@@ -65,7 +65,7 @@ def build_cariii():
     # Emojis
     dice = randint(0, 2)
     if dice == 0:
-        # same-long
+        # single-long
         cariii_msg += cariii_emoji[randint(0, len(cariii_emoji) - 1)] * randint(3, 10)
     elif dice == 1:
         # couple-long-short
