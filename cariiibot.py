@@ -5,12 +5,21 @@
 
 import logging
 from random import randint
+import urllib, json
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Cariii/Whatt resources
 CARIII_TEXT = "Cari"
 CARIII_EMOJI = ["😍", "😘", "😚", "🌝", "❤", "💕"]
 WHAT_TEXT = ["Que?", "Si?", "kdise?", "Emmmmm... que?", "No entiendo 🤔", "🤡"]
+
+# GYPHY resources
+GIPHY_API_KEY = open('.giphy-api-key').read().rstrip()
+GIPHY_API = 'https://api.giphy.com'
+GIPHY_RAND_ENDP = '/v1/gifs/random'
+KAWAII_TAG = 'kawaii'
+KAWAII_RATING = 'PG-13'
+
 
 # Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -35,6 +44,25 @@ def help(bot, update):
     """Send help message"""
     # TODO: Write help
     update.message.reply_text('No puedo ayudarte :(')
+
+def kawaii(bot, update):
+    """Send kawaii GIF"""
+    url = (GIPHY_API + GIPHY_RAND_ENDP + '?'
+           'api_key=' + GIPHY_API_KEY + '&'
+           'tag=' + KAWAII_TAG + '&'
+           'rating=' + KAWAII_RATING)
+    try:    
+        # Get GIF url
+        response = urllib.urlopen(url)
+        json_response = json.loads(response.read())
+        gif_url = json_response['data']['image_url']
+
+        # Send GIF
+        bot.sendDocument(chat_id=update.message.chat_id, document = gif_url)
+    except:
+        # Some error happended, can's send GIF
+        update.message.reply_text('Me he quedado sin GIFs por ahora, lo siento :(')
+
 
 ################
 # TEXT REPLIES #
@@ -93,6 +121,7 @@ def main():
     # Add command handlers
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
+    dp.add_handler(CommandHandler("kawaii", kawaii))
 
     # Handle noncommands
     dp.add_handler(MessageHandler(Filters.text, analyze_text))
