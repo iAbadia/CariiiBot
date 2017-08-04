@@ -1,5 +1,8 @@
-# Token
+# Telegram Token
 .telegram-token
+
+# Giphy API Key
+.giphy-api-key
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
