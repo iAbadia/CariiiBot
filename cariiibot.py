@@ -4,61 +4,57 @@
 # Pa' mi cari <3
 
 import logging
-import telegram
-from telegram.error import NetworkError, Unauthorized
-from time import sleep
 from random import randint
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-cariii_text = "Cari"
-cariii_emoji = ["😍", "😘", "😚", "🌝", "❤", "💕"]
-what_text = ["Que?", "Si?", "kdise?", "Emmmmm... que?", "No entiendo 🤔", "🤡"]
+# Cariii/Whatt resources
+CARIII_TEXT = "Cari"
+CARIII_EMOJI = ["😍", "😘", "😚", "🌝", "❤", "💕"]
+WHAT_TEXT = ["Que?", "Si?", "kdise?", "Emmmmm... que?", "No entiendo 🤔", "🤡"]
 
-update_id = None
+# Logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
-def main():
-    global update_id
-    
-    # Telegram Bot Authorization Token
-    bot = telegram.Bot(open('.telegram-token').read().rstrip())
+logger = logging.getLogger(__name__)
 
-    # get the first pending update_id, this is so we can skip over it in case
-    # we get an "Unauthorized" exception.
-    try:
-        update_id = bot.get_updates()[0].update_id
-    except IndexError:
-        update_id = None
+############
+# COMMANDS #
+############
 
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+def error(bot, update, error):
+    """Logs any error"""
+    logger.warn('Update "%s" caused error "%s"' % (update, error))
 
-    while True:
-        try:
-            cariii(bot)
-        except NetworkError:
-            sleep(1)
-        except Unauthorized:
-            # The user has removed or blocked the bot.
-            update_id += 1
+def start(bot, update):
+    """Welcome message"""
+    # TODO: Think a better welcome msg
+    update.message.reply_text('Hola Cari!')
 
+def help(bot, update):
+    """Send help message"""
+    # TODO: Write help
+    update.message.reply_text('No puedo ayudarte :(')
 
-def cariii(bot):
-    global update_id
-    # Request updates after the last update_id
-    for update in bot.get_updates(offset=update_id, timeout=10):
-        update_id = update.update_id + 1
-        
-        # Reply to the message
-        if not update.message:
-            pass
-        elif "cari".lower() in update.message.text.lower():
-            update.message.reply_text(build_cariii())
-        else:
-            update.message.reply_text(build_what())
+################
+# TEXT REPLIES #
+################
+
+def analyze_text(bot, update):
+    """Analyze noncommand text and decide what to do"""
+    reply = ''
+    if 'cari'.lower() in update.message.text.lower():
+        reply = build_cariii()
+    else:
+        reply = build_what()
+
+    update.message.reply_text(reply)
 
 def build_cariii():
-    # Build a message based on cariii-text and cariii-emojis
+    """Build a message based on cariii-text and cariii-emojis"""
 
     # i's
-    cariii_msg = cariii_text
+    cariii_msg = CARIII_TEXT
     cariii_msg += "i" * randint(0, 10)
     cariii_msg += " "
 
@@ -66,20 +62,51 @@ def build_cariii():
     dice = randint(0, 2)
     if dice == 0:
         # single-long
-        cariii_msg += cariii_emoji[randint(0, len(cariii_emoji) - 1)] * randint(3, 10)
+        cariii_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)] * randint(3, 10)
     elif dice == 1:
         # couple-long-short
-        cariii_msg += cariii_emoji[randint(0, len(cariii_emoji) - 1)] * randint(6, 10)
-        cariii_msg += cariii_emoji[randint(0, len(cariii_emoji) - 1)] * randint(1, 5)
+        cariii_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)] * randint(6, 10)
+        cariii_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)] * randint(1, 5)
     else:
         # party
-        for x in range(randint(10, 15)):
-            cariii_msg += cariii_emoji[randint(0, len(cariii_emoji) - 1)]
+        for _ in range(randint(10, 15)):
+            cariii_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)]
 
     return cariii_msg
 
 def build_what():
-    return what_text[randint(0, len(what_text) - 1)]
+    """Build what message based on what_text"""
+    return WHAT_TEXT[randint(0, len(WHAT_TEXT) - 1)]
+
+def main():
+    """Set up and start Bot"""
+
+    # Read Bot Token
+    bot_token = open('.telegram-token').read().rstrip()
+
+    # Create the EventHandler and pass it your bot's token.
+    updater = Updater(bot_token)
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # Add command handlers
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", help))
+
+    # Handle noncommands
+    dp.add_handler(MessageHandler(Filters.text, analyze_text))
+
+    # log all errors
+    dp.add_error_handler(error)
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Run the bot until you press Ctrl-C or the process receives SIGINT,
+    # SIGTERM or SIGABRT. This should be used most of the time, since
+    # start_polling() is non-blocking and will stop the bot gracefully.
+    updater.idle()
 
 if __name__ == '__main__':
     main()
