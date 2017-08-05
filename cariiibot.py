@@ -4,7 +4,7 @@
 # Pa' mi cari <3
 
 import logging
-from random import randint
+from random import randint, getrandbits
 import urllib, json
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
@@ -17,9 +17,54 @@ WHAT_TEXT = ["Que?", "Si?", "kdise?", "Emmmmm... que?", "No entiendo ðŸ¤”", "ðŸ¤
 GIPHY_API_KEY = open('.giphy-api-key').read().rstrip()
 GIPHY_API = 'https://api.giphy.com'
 GIPHY_RAND_ENDP = '/v1/gifs/random'
+GIPHY_RATING = 'PG-13'
 KAWAII_TAG = 'kawaii'
-KAWAII_RATING = 'PG-13'
+ANIMALITOS_TAG = 'animals'
 
+class GiphyRandomRequest(object):
+
+    def __init__(self, api_key, tag, rating, query):
+        if not api_key:
+            logger.warn('GiphyRandomRequest: No API key provided')
+            return
+        self.api_key = api_key
+        self.tag = tag
+        self.rating = rating
+
+        if query:
+            self.query()
+    
+    def query(self):
+        url = GIPHY_API + GIPHY_RAND_ENDP + '?'
+        # Check for API key
+        if not self.api_key:
+            logger.warn('GiphyRandomRequest<query()>: No API key provided')
+            return
+        # Add API key
+        url += 'api_key=' + self.api_key + '&'
+        # Add tag if provided
+        if self.tag:
+            url += 'tag=' + self.tag + '&'
+        # Add rating if provided
+        if self.rating:
+            url += 'rating=' + self.rating + '&'
+        # Indicate JSON
+        url += 'fmt=json'
+
+        # Do the query
+        try:    
+            # Get GIF url
+            response = urllib.urlopen(url)
+            self.gif_json = json.loads(response.read())
+        except:
+            # Some error happended, can's send GIF
+            logger.error('GiphyRandomRequest<query>: Error ocurred while requesting GIF.')
+
+    def get_gif_url(self):
+        if self.gif_json:
+            return self.gif_json['data']['image_url']
+        else:
+            return None
 
 # Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -43,25 +88,46 @@ def start(bot, update):
 def help(bot, update):
     """Send help message"""
     # TODO: Write help
-    update.message.reply_text('No puedo ayudarte :(')
+    help_msg = 'Prueba un comando!\n  `/kawaii`\n  `/animalitos`'
+    update.message.reply_text(help_msg, parse_mode='markdown')
 
 def kawaii(bot, update):
     """Send kawaii GIF"""
-    url = (GIPHY_API + GIPHY_RAND_ENDP + '?'
-           'api_key=' + GIPHY_API_KEY + '&'
-           'tag=' + KAWAII_TAG + '&'
-           'rating=' + KAWAII_RATING)
-    try:    
-        # Get GIF url
-        response = urllib.urlopen(url)
-        json_response = json.loads(response.read())
-        gif_url = json_response['data']['image_url']
-
+    # Get GIF url
+    gif_url = GiphyRandomRequest(GIPHY_API_KEY, 
+                                 KAWAII_TAG, 
+                                 GIPHY_RATING, 
+                                 True).get_gif_url()
+    # Check if you got the url
+    if gif_url:
         # Send GIF
         bot.sendDocument(chat_id=update.message.chat_id, document = gif_url)
-    except:
+    else:
         # Some error happended, can's send GIF
         update.message.reply_text('Me he quedado sin GIFs por ahora, lo siento :(')
+
+def animals(bot, update):
+    """Send kawaii GIF"""
+    cutefunny = ''
+    # Cute or funny
+    if bool(getrandbits(1)):
+        # Cute!
+        cutefunny = 'cute'
+    else:
+        # Funny!
+        cutefunny = 'funny'
+    # Get GIF url
+    gif_url = GiphyRandomRequest(GIPHY_API_KEY, 
+                                 cutefunny + '+' + ANIMALITOS_TAG, 
+                                 GIPHY_RATING, 
+                                 True).get_gif_url()
+    # Check if you got the url
+    if gif_url:
+        # Send GIF
+        bot.sendDocument(chat_id=update.message.chat_id, document = gif_url)
+    else:
+        # Some error happended, can's send GIF
+        update.message.reply_text('Me he quedado sin GIFs por ahora, lo siento :(') 
 
 
 ################
@@ -122,6 +188,8 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("kawaii", kawaii))
+    dp.add_handler(CommandHandler("animalitos", animals))
+
 
     # Handle noncommands
     dp.add_handler(MessageHandler(Filters.text, analyze_text))
