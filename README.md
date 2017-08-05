@@ -53,6 +53,7 @@ Respuesta automatizada a cualquier mensaje que no contenga la cadena `cari`.
 A continuación la lista de comandos soportados:
 
  - `/kawaii` Recibirás un GIF kawaii aleatorio.
+ - `/animalitos` Recibirás un GIF de animalitos (cute & funny)
 
 ## Screenshots
 
