@@ -4,11 +4,10 @@
 # Pa' mi cari <3
 
 import logging
-import time
-import threading
 from random import randint, getrandbits
-import urllib, json
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import urllib
+import json
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Job
 
 # Cariii/Whatt resources
 CARIII_TEXT = "Cari"
@@ -48,12 +47,11 @@ def send_doc(bot, update, doc):
     LOG_SENT_DOCS += 1
     bot.sendDocument(chat_id=update.message.chat_id, document = doc)
 
-def log_usage():
+def log_usage(bot, job):
     """Log Bot usage"""
 
-    global LOG_SENT_DOCS, LOG_SENT_MSGS
+    global LOG_SENT_DOCS, LOG_SENT_MSGS, log_thread
     logger.info('USAGE: Sent messages: %d | Sent Docs: %d | Total sent: %d' %(LOG_SENT_MSGS, LOG_SENT_DOCS, LOG_SENT_MSGS+LOG_SENT_DOCS))
-    threading.Timer(3600, log_usage).start()
 
 class GiphyRandomRequest(object):
 
@@ -232,8 +230,11 @@ def main():
     # log all errors
     dp.add_error_handler(error)
 
-    # log usage
-    log_usage()
+    # Jobs
+    jq = updater.job_queue
+
+    # Log usage
+    jq.run_repeating(log_usage, 10)
 
     # Start the Bot
     updater.start_polling()
