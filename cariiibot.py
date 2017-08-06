@@ -25,6 +25,7 @@ ANIMALITOS_TAG = 'animals'
 # LOGGING VARIABLES
 LOG_SENT_MSGS = 0
 LOG_SENT_DOCS = 0
+LOG_INTERVAL = 3600
 
 #######
 # AUX #
@@ -234,7 +235,7 @@ def main():
     jq = updater.job_queue
 
     # Log usage
-    jq.run_repeating(log_usage, 10)
+    jq.run_repeating(log_usage, LOG_INTERVAL)
 
     # Start the Bot
     updater.start_polling()
