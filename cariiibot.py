@@ -4,6 +4,8 @@
 # Pa' mi cari <3
 
 import logging
+import time
+import threading
 from random import randint, getrandbits
 import urllib, json
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -20,6 +22,38 @@ GIPHY_RAND_ENDP = '/v1/gifs/random'
 GIPHY_RATING = 'PG-13'
 KAWAII_TAG = 'kawaii'
 ANIMALITOS_TAG = 'animals'
+
+# LOGGING VARIABLES
+LOG_SENT_MSGS = 0
+LOG_SENT_DOCS = 0
+
+#######
+# AUX #
+#######
+def send_msg(update, msg, **kwargs):
+    """Send text message"""
+
+    global LOG_SENT_MSGS
+    LOG_SENT_MSGS += 1
+    # Markdown/HTML
+    if kwargs and kwargs['parse_mode']: 
+        update.message.reply_text(msg, parse_mode=kwargs['parse_mode'])
+    else:
+        update.message.reply_text(msg)
+
+def send_doc(bot, update, doc):
+    """Send Document"""
+
+    global LOG_SENT_DOCS
+    LOG_SENT_DOCS += 1
+    bot.sendDocument(chat_id=update.message.chat_id, document = doc)
+
+def log_usage():
+    """Log Bot usage"""
+
+    global LOG_SENT_DOCS, LOG_SENT_MSGS
+    logger.info('USAGE: Sent messages: %d | Sent Docs: %d | Total sent: %d' %(LOG_SENT_MSGS, LOG_SENT_DOCS, LOG_SENT_MSGS+LOG_SENT_DOCS))
+    threading.Timer(3600, log_usage).start()
 
 class GiphyRandomRequest(object):
 
@@ -83,13 +117,14 @@ def error(bot, update, error):
 def start(bot, update):
     """Welcome message"""
     # TODO: Think a better welcome msg
-    update.message.reply_text('Hola Cari!')
+    welcome_message = 'Hola Cari!'
+    send_msg(update, welcome_message)
 
 def help(bot, update):
     """Send help message"""
     # TODO: Write help
     help_msg = 'Prueba un comando!\n  `/kawaii`\n  `/animalitos`'
-    update.message.reply_text(help_msg, parse_mode='markdown')
+    send_msg(update, help_msg, parse_mode='markdown')
 
 def kawaii(bot, update):
     """Send kawaii GIF"""
@@ -101,10 +136,10 @@ def kawaii(bot, update):
     # Check if you got the url
     if gif_url:
         # Send GIF
-        bot.sendDocument(chat_id=update.message.chat_id, document = gif_url)
+        send_doc(bot, update, gif_url)
     else:
         # Some error happended, can's send GIF
-        update.message.reply_text('Me he quedado sin GIFs por ahora, lo siento :(')
+        send_msg(update, 'Me he quedado sin GIFs por ahora, lo siento :(')
 
 def animals(bot, update):
     """Send kawaii GIF"""
@@ -124,10 +159,10 @@ def animals(bot, update):
     # Check if you got the url
     if gif_url:
         # Send GIF
-        bot.sendDocument(chat_id=update.message.chat_id, document = gif_url)
+        send_doc(bot, update, gif_url)
     else:
         # Some error happended, can's send GIF
-        update.message.reply_text('Me he quedado sin GIFs por ahora, lo siento :(') 
+        send_msg(update, 'Me he quedado sin GIFs por ahora, lo siento :(')
 
 
 ################
@@ -142,7 +177,7 @@ def analyze_text(bot, update):
     else:
         reply = build_what()
 
-    update.message.reply_text(reply)
+    send_msg(update, reply)
 
 def build_cariii():
     """Build a message based on cariii-text and cariii-emojis"""
@@ -196,6 +231,9 @@ def main():
 
     # log all errors
     dp.add_error_handler(error)
+
+    # log usage
+    log_usage()
 
     # Start the Bot
     updater.start_polling()
