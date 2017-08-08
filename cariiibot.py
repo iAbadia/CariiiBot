@@ -122,7 +122,7 @@ def start(bot, update):
 def help(bot, update):
     """Send help message"""
     # TODO: Write help
-    help_msg = 'Prueba un comando!\n  `/kawaii`\n  `/animalitos`\n  /pistoleros'
+    help_msg = 'Prueba un comando!\n  /kawaii\n  /animalitos\n  /pistoleros'
     send_msg(update, help_msg, parse_mode='markdown')
 
 def kawaii(bot, update):
