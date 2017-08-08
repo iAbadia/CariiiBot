@@ -163,6 +163,11 @@ def animals(bot, update):
         # Some error happended, can's send GIF
         send_msg(update, 'Me he quedado sin GIFs por ahora, lo siento :(')
 
+def pistoleros(bot, update):
+    """Send the archifamous Pistoleros del Eclipse vid"""
+    pistoleros_url = 'https://www.youtube.com/watch?v=8VRRI2FkRl8'
+    send_msg(update, pistoleros_url)
+
 
 ################
 # TEXT REPLIES #
@@ -223,6 +228,8 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("kawaii", kawaii))
     dp.add_handler(CommandHandler("animalitos", animals))
+    dp.add_handler(CommandHandler("pistoleros", pistoleros))
+
 
 
     # Handle noncommands
