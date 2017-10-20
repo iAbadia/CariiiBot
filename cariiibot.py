@@ -12,7 +12,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Job
 # Cariii/Whatt resources
 CARIII_TEXT = "Cari"
 CARIII_EMOJI = ["😍", "😘", "😚", "🌝", "❤", "💕"]
-WHAT_TEXT = ["Que?", "Si?", "kdise?", "Emmmmm... que?", "No entiendo 🤔", "🤡"]
+WHAT_TEXT = ["Que?", "Si?", "?", "Emmmmm... que?", "No entiendo 🤔", "👻"]
 
 # GYPHY resources
 GIPHY_API_KEY = open('.giphy-api-key').read().rstrip()
