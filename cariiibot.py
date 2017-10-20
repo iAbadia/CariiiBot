@@ -122,7 +122,7 @@ def start(bot, update):
 def help(bot, update):
     """Send help message"""
     # TODO: Write help
-    help_msg = 'Prueba un comando!\n  /kawaii\n  /animalitos\n  /pistoleros'
+    help_msg = 'Prueba un comando!\n  /kawaii\n  /anims\n  /pistoleros'
     send_msg(update, help_msg, parse_mode='markdown')
 
 def kawaii(bot, update):
@@ -141,7 +141,7 @@ def kawaii(bot, update):
         send_msg(update, 'Me he quedado sin GIFs por ahora, lo siento :(')
 
 def animals(bot, update):
-    """Send kawaii GIF"""
+    """Send animals GIF"""
     cutefunny = ''
     # Cute or funny
     if bool(getrandbits(1)):
@@ -227,7 +227,7 @@ def main():
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("kawaii", kawaii))
-    dp.add_handler(CommandHandler("animalitos", animals))
+    dp.add_handler(CommandHandler("anims", animals))
     dp.add_handler(CommandHandler("pistoleros", pistoleros))
 
 
