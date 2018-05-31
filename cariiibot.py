@@ -4,11 +4,14 @@
 # Pa' mi cari <3
 
 import logging
+from datetime import datetime
+import threading
 import os
 from random import randint, getrandbits
 import urllib
 import json
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Job
+from telegram import Bot
 
 # Cariii/Whatt resources
 CARIII_TEXT = "Cari"
@@ -25,6 +28,8 @@ ANIMALITOS_TAG = 'animals'
 
 # Dayly pic users
 DAILY_PIC_USERS = {'send': -1, 'receive': -1}
+DAILY_PIC_SAVE_PATH = ".daily-pics/stash/"
+DAILY_PIC_SENT_PATH = ".daily-pics/sent/"
 
 # LOGGING VARIABLES
 LOG_SENT_MSGS = 0
@@ -34,6 +39,16 @@ LOG_INTERVAL = 3600
 #######
 # AUX #
 #######
+
+def daily_sender():
+    return DAILY_PIC_USERS["send"]
+
+def daily_receiver():
+    return DAILY_PIC_USERS["receive"]
+
+def is_daily_sender(update):
+    return update.effective_chat.id == daily_sender()
+
 def send_msg(update, msg, **kwargs):
     """Send text message"""
 
@@ -45,12 +60,17 @@ def send_msg(update, msg, **kwargs):
     else:
         update.message.reply_text(msg)
 
-def send_doc(bot, update, doc):
+def send_doc(bot, update, doc, chat_id=False):
     """Send Document"""
 
     global LOG_SENT_DOCS
     LOG_SENT_DOCS += 1
-    bot.sendDocument(chat_id=update.message.chat_id, document = doc)
+    if chat_id:
+        # Send to given chat
+        bot.sendDocument(chat_id=chat_id, document = doc)
+    else:
+        # Use the update
+        bot.sendDocument(chat_id=update.message.chat_id, document = doc)
 
 def log_usage(bot, job):
     """Log Bot usage"""
@@ -253,7 +273,7 @@ def unregister_daily_pic_send(bot, update):
 
     # Check if correct password
     if sent_password == password:
-        if DAILY_PIC_USERS["send"] == update.effective_chat.id:
+        if is_daily_sender(update):
             # Unregister the user
             DAILY_PIC_USERS["send"] = -1
             # Save to file
@@ -283,8 +303,99 @@ def init_daily_pic_users():
 
 def handle_photo(bot, update):
     """Handle received photos"""
-    max_size_photo = update.message.photo[-1]
-    max_size_photo.get_file().download(custom_path="/tmp/image" + str(max_size_photo.file_id))
+    logger.info("Received picture")
+    if is_daily_sender(update):
+        # Check if image is ment to be for daily pic use
+        if update.message.caption == "daily_pic":
+            # Get max resolution picture
+            max_size_photo = update.message.photo[-1]
+            # Save pic in stash (name will be its ID, leter used to send it from Telegram servers)
+            max_size_photo.get_file().download(custom_path=DAILY_PIC_SAVE_PATH + str(max_size_photo.file_id))
+            # Inform it was correctly saved
+            send_msg(update, "Got it! :D")
+        else:
+            # Generic response, for the lolz
+            send_msg(update, "Ok...")
+    else:
+        # Generic response, for the lolz
+        send_msg(update, "Ok...")
+
+def daily_send(bot):
+    """Send a picture daily"""
+    logger.info("Attempting to send daily pic")
+    if daily_receiver() > 0:
+        # There's a registered receiver, proceed to pick a pic and send
+        daily_pic_path = get_daily_pic()
+        # Check if there're images
+        if daily_pic_path:
+            #pic_to_send = open(DAILY_PIC_SAVE_PATH + daily_pic_path, 'rb')
+            pic_to_send = str(daily_pic_path)
+            bot.sendPhoto(chat_id=daily_receiver(), photo = pic_to_send, caption=build_morning())
+            #pic_to_send.close()
+            logger.info("Daily pic sent!")
+            move_sent_pic(pic_to_send)
+        else:
+            # Alert sender that there're no images
+            logger.warn("No daily pics :( Alerting sender!!")
+            if daily_sender() != -1:
+                bot.sendMessage(daily_sender(), "Hey daily sender, *YOU ARE OUT OF PICTURES!!!*", parse_mode='markdown')
+    
+    # Set timer for next day
+    set_daily_send(bot)
+    
+
+def set_daily_send(bot):
+    """Set send for next day"""
+    x = datetime.today()
+    # If last day of month, set to one
+    try:
+        y = x.replace(day=x.day+1, hour=9, minute=0, second=0, microsecond=0)
+    except ValueError:
+        # This handles month change (NOT YEAR CHANGE, hardly necessary tho...)
+        y = x.replace(month=x.month+1, day=1, hour=9, minute=0, second=0, microsecond=0)
+    delta_t = y-x
+
+    secs=delta_t.seconds+1
+
+    threading.Timer(secs, daily_send, [bot]).start()
+
+def get_daily_pic():
+    """Get a picture from daily pic stash"""
+    # Get list of files
+    pics_list = os.listdir(DAILY_PIC_SAVE_PATH)
+    if pics_list != []:
+        # Get the first and pic and send it
+        return pics_list[0]
+    else:
+        return None
+
+def move_sent_pic(pic):
+    """Move sent picture to sent pictures"""
+    os.rename(DAILY_PIC_SAVE_PATH + pic, DAILY_PIC_SENT_PATH + pic)
+
+def build_morning():
+    """Build a message based on morning-text and cariii-emojis"""
+
+    # i's
+    morning_msg = "Buenos dia"
+    morning_msg += "a" * randint(0, 10)
+    morning_msg += "s "
+
+    # Emojis
+    dice = randint(0, 2)
+    if dice == 0:
+        # single-long
+        morning_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)] * randint(3, 10)
+    elif dice == 1:
+        # couple-long-short
+        morning_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)] * randint(6, 10)
+        morning_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)] * randint(1, 5)
+    else:
+        # party
+        for _ in range(randint(10, 15)):
+            morning_msg += CARIII_EMOJI[randint(0, len(CARIII_EMOJI) - 1)]
+
+    return morning_msg
 
 ################
 # TEXT REPLIES #
@@ -330,7 +441,6 @@ def build_what():
 
 def main():
     """Set up and start Bot"""
-
     # Initialise daily pic users
     init_daily_pic_users()
 
@@ -370,6 +480,10 @@ def main():
 
     # Start the Bot
     updater.start_polling()
+
+    # Start daily send
+    bot = Bot(bot_token)
+    set_daily_send(bot)
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
