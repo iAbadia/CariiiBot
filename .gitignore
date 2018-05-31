@@ -4,6 +4,11 @@
 # Giphy API Key
 .giphy-api-key
 
+# Daily pic
+.daily-pic-users
+.daily-pics/
+.daily-pic-passwd
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
