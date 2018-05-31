@@ -4,6 +4,7 @@
 # Pa' mi cari <3
 
 import logging
+import os
 from random import randint, getrandbits
 import urllib
 import json
@@ -21,6 +22,9 @@ GIPHY_RAND_ENDP = '/v1/gifs/random'
 GIPHY_RATING = 'PG-13'
 KAWAII_TAG = 'kawaii'
 ANIMALITOS_TAG = 'animals'
+
+# Dayly pic users
+DAILY_PIC_USERS = {'send': -1, 'receive': -1}
 
 # LOGGING VARIABLES
 LOG_SENT_MSGS = 0
@@ -168,6 +172,119 @@ def pistoleros(bot, update):
     pistoleros_url = 'https://www.youtube.com/watch?v=8VRRI2FkRl8'
     send_msg(update, pistoleros_url)
 
+#############
+# DAILY PIC #
+#############
+
+def register_daily_pic_receive(bot, update):
+    """Register new user if password checks out"""
+    global DAILY_PIC_USERS
+    sent_password = update.message.text.replace("/register_daily_pic_receive ", "")
+    password = open('.daily-pic-passwd').read().rstrip()
+
+    # Check if correct password
+    if sent_password == password:
+        if DAILY_PIC_USERS["receive"] < 0:
+            # Register the user
+            DAILY_PIC_USERS["receive"] = update.effective_chat.id
+            # Save to file
+            with open('.daily-pic-users', 'w') as f:
+                json.dump(DAILY_PIC_USERS, f)
+            # Send response
+            send_msg(update, "You are now *registered* for *receiving* daily pics!", parse_mode='markdown')
+        else:
+            # There's a user already registered
+            send_msg(update, "Sorry, there's already a user registered for receiving :(")
+    else:
+        # Wrong password
+        send_msg(update, "Sorry, wrong password :)")
+
+def register_daily_pic_send(bot, update):
+    """Register new user if password checks out"""
+    global DAILY_PIC_USERS
+    sent_password = update.message.text.replace("/register_daily_pic_send ", "")
+    password = open('.daily-pic-passwd').read().rstrip()
+
+    # Check if correct password
+    if sent_password == password:
+        if DAILY_PIC_USERS["send"] < 0:
+            # Register the user
+            DAILY_PIC_USERS["send"] = update.effective_chat.id
+            # Save to file
+            with open('.daily-pic-users', 'w') as f:
+                json.dump(DAILY_PIC_USERS, f)
+            # Send response
+            send_msg(update, "You are now *registered* for *sending* daily pics!", parse_mode='markdown')
+        else:
+            # There's a user already registered
+            send_msg(update, "Sorry, there's already a user registered for sending :(")
+    else:
+        # Wrong password
+        send_msg(update, "Sorry, wrong password :)")
+
+def unregister_daily_pic_receive(bot, update):
+    """Unregister receiver"""
+    global DAILY_PIC_USERS
+    sent_password = update.message.text.replace("/unregister_daily_pic_receive ", "")
+    password = open('.daily-pic-passwd').read().rstrip()
+
+    # Check if correct password
+    if sent_password == password:
+        if DAILY_PIC_USERS["receive"] == update.effective_chat.id:
+            # Unregister the user
+            DAILY_PIC_USERS["receive"] = -1
+            # Save to file
+            with open('.daily-pic-users', 'w') as f:
+                json.dump(DAILY_PIC_USERS, f)
+            # Send response
+            send_msg(update, "You are now *unregistered* for *receiving* daily pics!", parse_mode='markdown')
+        else:
+            # Other user is registered
+            send_msg(update, "You were not registered anyway :)")
+    else:
+        # Wrong password
+        send_msg(update, "Sorry, wrong password :)")
+
+def unregister_daily_pic_send(bot, update):
+    """Unregister sender"""
+    global DAILY_PIC_USERS
+    sent_password = update.message.text.replace("/unregister_daily_pic_send ", "")
+    password = open('.daily-pic-passwd').read().rstrip()
+
+    # Check if correct password
+    if sent_password == password:
+        if DAILY_PIC_USERS["send"] == update.effective_chat.id:
+            # Unregister the user
+            DAILY_PIC_USERS["send"] = -1
+            # Save to file
+            with open('.daily-pic-users', 'w') as f:
+                json.dump(DAILY_PIC_USERS, f)
+            # Send response
+            send_msg(update, "You are now *unregistered* for *sending* daily pics!", parse_mode='markdown')
+        else:
+            # Other user is registered
+            send_msg(update, "You were not registered anyway :)")
+    else:
+        # Wrong password
+        send_msg(update, "Sorry, wrong password :)")
+
+def init_daily_pic_users():
+    """Read users file and set DAILY_PIC_USERS"""
+    global DAILY_PIC_USERS
+    # Check if registered users file exists
+    if not os.path.isfile('.daily-pic-users'):
+        register_file = open('.daily-pic-users', 'w+')
+        register_file.write('{"send": -1, "receive": -1}')
+        register_file.close()
+        DAILY_PIC_USERS = {"send": -1, "receive": -1}
+    else:
+        with open('.daily-pic-users', 'r') as f:
+            DAILY_PIC_USERS = json.load(f)
+
+def handle_photo(bot, update):
+    """Handle received photos"""
+    max_size_photo = update.message.photo[-1]
+    max_size_photo.get_file().download(custom_path="/tmp/image" + str(max_size_photo.file_id))
 
 ################
 # TEXT REPLIES #
@@ -214,6 +331,9 @@ def build_what():
 def main():
     """Set up and start Bot"""
 
+    # Initialise daily pic users
+    init_daily_pic_users()
+
     # Read Bot Token
     bot_token = open('.telegram-token').read().rstrip()
 
@@ -229,11 +349,15 @@ def main():
     dp.add_handler(CommandHandler("kawaii", kawaii))
     dp.add_handler(CommandHandler("anims", animals))
     dp.add_handler(CommandHandler("pistoleros", pistoleros))
-
+    dp.add_handler(CommandHandler("register_daily_pic_receive", register_daily_pic_receive))
+    dp.add_handler(CommandHandler("register_daily_pic_send", register_daily_pic_send))
+    dp.add_handler(CommandHandler("unregister_daily_pic_receive", unregister_daily_pic_receive))
+    dp.add_handler(CommandHandler("unregister_daily_pic_send", unregister_daily_pic_send))
 
 
     # Handle noncommands
     dp.add_handler(MessageHandler(Filters.text, analyze_text))
+    dp.add_handler(MessageHandler(Filters.photo, handle_photo))
 
     # log all errors
     dp.add_error_handler(error)
