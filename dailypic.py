@@ -49,6 +49,19 @@ def init_daily_pic_users():
         with open('.daily-pic-users', 'r') as f:
             DAILY_PIC_USERS = json.load(f)
 
+# Check number of available pics
+def pic_stats(bot, update):
+    """Check sent and tobe-sent pictures"""
+    if is_daily_sender(update):
+        # Check number of pictures
+        stash_n = len(os.listdir(DAILY_PIC_SAVE_PATH))
+        sent_n = len(os.listdir(DAILY_PIC_SENT_PATH))
+
+        # Send msg
+        stats = "I've *sent " + str(stash_n) + " pictures* and "
+        stats += "I still have *" + str(sent_n) + " pictures stashed*."
+        send_msg(update, stats, parse_mode='markdown')
+
 # Daily pic register/unregister functions
 def register_daily_pic_receive(bot, update):
     """Register new user if password checks out"""
@@ -238,4 +251,3 @@ def build_morning():
             morning_msg += DAILY_PIC_EMOJI[randint(0, len(DAILY_PIC_EMOJI) - 1)]
 
     return morning_msg
-
