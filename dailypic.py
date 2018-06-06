@@ -58,8 +58,8 @@ def pic_stats(bot, update):
         sent_n = len(os.listdir(DAILY_PIC_SENT_PATH))
 
         # Send msg
-        stats = "I've *sent " + str(stash_n) + " pictures* and "
-        stats += "I still have *" + str(sent_n) + " pictures stashed*."
+        stats = "I've *sent " + str(sent_n) + " pictures* and "
+        stats += "I still have *" + str(stash_n) + " pictures stashed*."
         send_msg(update, stats, parse_mode='markdown')
 
 # Daily pic register/unregister functions
