@@ -203,7 +203,7 @@ def set_daily_send(bot):
         y = x.replace(day=x.day+1, hour=9, minute=0, second=0, microsecond=0)
     except ValueError:
         # This handles month change (NOT YEAR CHANGE, hardly necessary tho...)
-        y = x.replace(month=x.month+1, day=1, hour=9, minute=0, second=0, microsecond=0)
+        y = x.replace(month=x.month+1, day=1, hour=8, minute=0, second=0, microsecond=0)
     delta_t = y-x
 
     secs=delta_t.seconds+1
