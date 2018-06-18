@@ -15,6 +15,9 @@ from bothelper import send_msg, send_doc, logger
 # Cariii/Whatt resources
 DAILY_PIC_TEXT = "Buenos dia"
 DAILY_PIC_EMOJI = ["😍", "😘", "😚", "🌞", "❤", "💕"]
+DAILY_PIC_TIMER = threading.Timer(0, None)
+DAILY_PIC_TIME = 8  # Default to 8 am 
+                    # (could save value and read but I'm just to lazy for that right now)
 
 #############
 # DAILY PIC #
@@ -61,6 +64,26 @@ def pic_stats(bot, update):
         stats = "I've *sent " + str(sent_n) + " pictures* and "
         stats += "I still have *" + str(stash_n) + " pictures stashed*."
         send_msg(update, stats, parse_mode='markdown')
+
+def pic_time(bot, update):
+    """Set time to send the pic"""
+    global DAILY_PIC_TIME
+    if is_daily_sender(update):
+        # Check new time
+        try:
+            # Check valid
+            time = int(update.message.text.replace("/pic_time ", ""))
+            if not 0 < time <= 23:
+                raise ValueError('Number not in range!')
+            # All checks good, set new time
+            DAILY_PIC_TIME = time
+            set_daily_send(bot)
+
+            # Notify user
+            send_msg(update, "Success! New timer set to "+str(DAILY_PIC_TIME))
+        except:
+            send_msg(update, "Please send a valid number (0-23)")
+
 
 # Daily pic register/unregister functions
 def register_daily_pic_receive(bot, update):
@@ -197,20 +220,26 @@ def handle_daily_send(update):
 
 def set_daily_send(bot):
     """Set send for next day"""
+    global DAILY_PIC_TIMER, DAILY_PIC_TIME
+
+    # Cancel timer first
+    DAILY_PIC_TIMER.cancel()
+
+    # Base today
     x = datetime.today()
     # If last day of month, set to one
     try:
-        y = x.replace(day=x.day+1, hour=9, minute=0, second=0, microsecond=0)
+        y = x.replace(day=x.day+1, hour=DAILY_PIC_TIME, minute=0, second=0, microsecond=0)
     except ValueError:
         # This handles month change (NOT YEAR CHANGE, hardly necessary tho...)
-        y = x.replace(month=x.month+1, day=1, hour=8, minute=0, second=0, microsecond=0)
+        y = x.replace(month=x.month+1, day=1, hour=DAILY_PIC_TIME, minute=0, second=0, microsecond=0)
+    # Time to set the timer
     delta_t = y-x
-
     secs=delta_t.seconds+1
-
-    t = threading.Timer(secs, daily_send, [bot])
-    t.daemon = True
-    t.start()
+    # Set and start timer
+    DAILY_PIC_TIMER = threading.Timer(secs, daily_send, [bot])
+    DAILY_PIC_TIMER.daemon = True
+    DAILY_PIC_TIMER.start()
 
 # Daily pic local image handling functions
 def get_daily_pic():

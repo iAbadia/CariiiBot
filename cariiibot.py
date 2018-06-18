@@ -11,7 +11,7 @@ from cariii import kawaii, animals, pistoleros, build_cariii, build_what
 from dailypic import (register_daily_pic_receive, register_daily_pic_send,
                       unregister_daily_pic_receive, unregister_daily_pic_send,
                       is_daily_sender, init_daily_pic_users, set_daily_send,
-                      handle_daily_send, pic_stats)
+                      handle_daily_send, pic_stats, pic_time)
 
 ############
 # COMMANDS #
@@ -86,6 +86,7 @@ def main():
     dp.add_handler(CommandHandler("unregister_daily_pic_receive", unregister_daily_pic_receive))
     dp.add_handler(CommandHandler("unregister_daily_pic_send", unregister_daily_pic_send))
     dp.add_handler(CommandHandler("pic_stats", pic_stats))
+    dp.add_handler(CommandHandler("pic_time", pic_time))
 
 
 
