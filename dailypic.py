@@ -185,15 +185,22 @@ def daily_send(bot):
     logger.info("Attempting to send daily pic")
     if daily_receiver() > 0:
         # There's a registered receiver, proceed to pick a pic and send
-        daily_pic_path = get_daily_pic()
+        daily_pic = get_daily_pic()
         # Check if there're images
-        if daily_pic_path:
-            #pic_to_send = open(DAILY_PIC_SAVE_PATH + daily_pic_path, 'rb')
-            pic_to_send = str(daily_pic_path)
+        if daily_pic['path']:
+            #pic_to_send = open(DAILY_PIC_SAVE_PATH + daily_pic['path'], 'rb')
+            pic_to_send = str(daily_pic['path'])
             bot.sendPhoto(chat_id=daily_receiver(), photo = pic_to_send, caption=build_morning())
             #pic_to_send.close()
             logger.info("Daily pic sent!")
             move_sent_pic(pic_to_send)
+
+            # Check if it's the last pic
+            if daily_pic['last']:
+                # Alert sender that we just sent the last pic
+                logger.warn("Last daily pic sent. Alerting sender!!")
+                if daily_sender() != -1:
+                    bot.sendMessage(daily_sender(), "Hey daily sender, *I JUST SENT THE LAST DAILY PIC*", parse_mode='markdown')
         else:
             # Alert sender that there're no images
             logger.warn("No daily pics :( Alerting sender!!")
@@ -246,11 +253,14 @@ def get_daily_pic():
     """Get a picture from daily pic stash"""
     # Get list of files
     pics_list = os.listdir(DAILY_PIC_SAVE_PATH)
+    # Check if it's the last pic
+    last = len(pics_list) == 1
+
     if pics_list != []:
         # Get random pic        
-        return pics_list[randint(0,len(pics_list)-1)]
+        return {'id': pics_list[randint(0,len(pics_list)-1)], 'last':last}
     else:
-        return None
+        return {'id':None, 'last':False}
 
 def move_sent_pic(pic):
     """Move sent picture to sent pictures"""
