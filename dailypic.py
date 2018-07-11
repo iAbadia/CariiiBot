@@ -247,8 +247,8 @@ def get_daily_pic():
     # Get list of files
     pics_list = os.listdir(DAILY_PIC_SAVE_PATH)
     if pics_list != []:
-        # Get the first and pic and send it
-        return pics_list[0]
+        # Get random pic        
+        return pics_list[randint(0,len(pics_list)-1)]
     else:
         return None
 
