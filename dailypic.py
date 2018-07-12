@@ -187,9 +187,9 @@ def daily_send(bot):
         # There's a registered receiver, proceed to pick a pic and send
         daily_pic = get_daily_pic()
         # Check if there're images
-        if daily_pic['path']:
+        if daily_pic['id']:
             #pic_to_send = open(DAILY_PIC_SAVE_PATH + daily_pic['path'], 'rb')
-            pic_to_send = str(daily_pic['path'])
+            pic_to_send = str(daily_pic['id'])
             bot.sendPhoto(chat_id=daily_receiver(), photo = pic_to_send, caption=build_morning())
             #pic_to_send.close()
             logger.info("Daily pic sent!")
